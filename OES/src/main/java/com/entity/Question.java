@@ -51,6 +51,9 @@ public class Question {
 	@NotNull
 	@Column(name = "addedby")
 	private String addedby;
+	
+	@Column(name = "subjectId")
+	private String subjectId;
 
 	public String getQdesc() {
 		return qdesc;
@@ -130,6 +133,14 @@ public class Question {
 
 	public void setAddedby(String addedby) {
 		this.addedby = addedby;
+	}
+
+	public String getSubjectId() {
+		return subjectId;
+	}
+
+	public void setSubjectId(String subjectId) {
+		this.subjectId = subjectId;
 	}
 
 	public QuestionType getQuestionType() {
