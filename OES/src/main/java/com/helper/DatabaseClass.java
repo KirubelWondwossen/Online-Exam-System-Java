@@ -575,6 +575,39 @@ public class DatabaseClass {
 		return ListOfques;
 	}
 
+	// get random questions by exam and topic
+	public List<Question> getRandomQuestionsByExamAndTopic(String examId, String topic, int limit) {
+		Transaction transaction = null;
+		List<Question> ListOfques = null;
+		try {
+			Session session = FactoryProvider.getFactory().openSession();
+			transaction = session.beginTransaction();
+			String hql = "FROM Question s WHERE s.examid = :examId";
+			if (topic != null && !topic.trim().isEmpty()) {
+				hql += " AND s.topic = :topic";
+			}
+			hql += " ORDER BY RAND()";
+			Query<Question> query = session.createQuery(hql, Question.class);
+			query.setParameter("examId", examId);
+			if (topic != null && !topic.trim().isEmpty()) {
+				query.setParameter("topic", topic);
+			}
+			query.setMaxResults(limit);
+			ListOfques = query.getResultList();
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+			ListOfques = new ArrayList<>();
+		}
+		if (ListOfques == null) {
+			ListOfques = new ArrayList<>();
+		}
+		return ListOfques;
+	}
+
 	// get questions
 	public ArrayList getQuestions(String examid) {
 		ArrayList list = new ArrayList();

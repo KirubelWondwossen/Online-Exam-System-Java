@@ -54,6 +54,9 @@ public class Question {
 	
 	@Column(name = "subjectId")
 	private String subjectId;
+	
+	@Column(name = "topic", length = 100)
+	private String topic;
 
 	public String getQdesc() {
 		return qdesc;
@@ -141,6 +144,14 @@ public class Question {
 
 	public void setSubjectId(String subjectId) {
 		this.subjectId = subjectId;
+	}
+
+	public String getTopic() {
+		return topic;
+	}
+
+	public void setTopic(String topic) {
+		this.topic = topic;
 	}
 
 	public QuestionType getQuestionType() {
