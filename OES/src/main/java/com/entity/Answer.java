@@ -1,5 +1,7 @@
 package com.entity;
 
+import java.time.LocalDateTime;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -34,6 +36,12 @@ public class Answer {
 	@NotNull
 	@Column(name = "mark")
 	private String mark;
+	
+	@Column(name = "attemptId")
+	private String attemptId;
+	
+	@Column(name = "submittedAt")
+	private LocalDateTime submittedAt;
 
 	public String getAnsid() {
 		return ansid;
@@ -81,6 +89,22 @@ public class Answer {
 
 	public void setMark(String mark) {
 		this.mark = mark;
+	}
+
+	public String getAttemptId() {
+		return attemptId;
+	}
+
+	public void setAttemptId(String attemptId) {
+		this.attemptId = attemptId;
+	}
+
+	public LocalDateTime getSubmittedAt() {
+		return submittedAt;
+	}
+
+	public void setSubmittedAt(LocalDateTime submittedAt) {
+		this.submittedAt = submittedAt;
 	}
 
 	public Answer(String ansid, String sid, String exId, String questionid, String opt, String mark) {

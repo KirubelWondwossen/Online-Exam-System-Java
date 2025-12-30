@@ -962,6 +962,65 @@ public class DatabaseClass {
 		return result;
 	}
 
+	// save or update answer during active exam
+	public boolean saveOrUpdateAnswer(String attemptId, String questionId, String studentAnswer) {
+		Transaction transaction = null;
+		boolean result = false;
+		Session session = null;
+		try {
+			session = FactoryProvider.getFactory().openSession();
+			transaction = session.beginTransaction();
+			
+			// Validate ExamAttempt exists and status == "STARTED"
+			ExamAttempt examAttempt = session.get(ExamAttempt.class, attemptId);
+			if (examAttempt == null || !"STARTED".equals(examAttempt.getStatus())) {
+				return false;
+			}
+			
+			// Check if Answer already exists for attemptId + questionId
+			String hql = "FROM Answer a WHERE a.attemptId = :attemptId AND a.questionid = :questionId";
+			Query<Answer> query = session.createQuery(hql, Answer.class);
+			query.setParameter("attemptId", attemptId);
+			query.setParameter("questionId", questionId);
+			Answer existingAnswer = query.uniqueResult();
+			
+			LocalDateTime now = LocalDateTime.now();
+			
+			if (existingAnswer != null) {
+				// Update existing answer
+				existingAnswer.setOpt(studentAnswer);
+				existingAnswer.setSubmittedAt(now);
+				session.update(existingAnswer);
+			} else {
+				// Create new Answer record
+				Answer answer = new Answer();
+				answer.setAnsid(RandomIdGenerator.generateRandomString());
+				answer.setAttemptId(attemptId);
+				answer.setQuestionid(questionId);
+				answer.setOpt(studentAnswer);
+				answer.setSubmittedAt(now);
+				answer.setSid(examAttempt.getStudentId());
+				answer.setExId(examAttempt.getExamId());
+				answer.setMark("0"); // Default mark, will be graded later
+				session.save(answer);
+			}
+			
+			transaction.commit();
+			result = true;
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+			result = false;
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+		return result;
+	}
+
 	// get marks of student from answer table
 	public List<Answer> getans(String exId, String sid) {
 		Transaction transaction = null;
