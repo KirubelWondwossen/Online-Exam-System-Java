@@ -1,11 +1,12 @@
 package com.entity;
 
-import java.sql.Date;
-import java.sql.Time;
+import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -43,6 +44,17 @@ public class Exam {
 	@NotNull
 	@Column(name = "markwrong")
 	private String markwrong;
+	
+	@Column(name = "startTime")
+	private LocalDateTime startTime;
+	
+	@Column(name = "endTime")
+	private LocalDateTime endTime;
+	
+	@NotNull
+	@Enumerated(EnumType.STRING)
+	@Column(name = "examStatus")
+	private ExamStatus examStatus = ExamStatus.DRAFT;
 
 	public String getExamid() {
 		return examid;
@@ -108,6 +120,30 @@ public class Exam {
 		this.markwrong = markwrong;
 	}
 
+	public LocalDateTime getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(LocalDateTime startTime) {
+		this.startTime = startTime;
+	}
+
+	public LocalDateTime getEndTime() {
+		return endTime;
+	}
+
+	public void setEndTime(LocalDateTime endTime) {
+		this.endTime = endTime;
+	}
+
+	public ExamStatus getExamStatus() {
+		return examStatus;
+	}
+
+	public void setExamStatus(ExamStatus examStatus) {
+		this.examStatus = examStatus;
+	}
+
 	public Exam(String examid, String addedby, String examtitle, String examdesc, String examduration, String totalQues,
 			String markright, String markwrong) {
 		super();
@@ -119,10 +155,12 @@ public class Exam {
 		this.totalQues = totalQues;
 		this.markright = markright;
 		this.markwrong = markwrong;
+		this.examStatus = ExamStatus.DRAFT;
 	}
 
 	public Exam() {
 		super();
+		this.examStatus = ExamStatus.DRAFT;
 		// TODO Auto-generated constructor stub
 	}
 

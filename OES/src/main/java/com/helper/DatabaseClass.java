@@ -33,22 +33,23 @@ public class DatabaseClass {
 		return result;
 	}
 
-	// user login validate
-	public boolean UserLoginValidate(String email, String password) {
+	// user login validate (returns user if found)
+	public User UserLoginValidate(String email, String password) {
+		return getUserByEmailAndPassword(email, password);
+	}
+
+	// fetch user by credentials
+	public User getUserByEmailAndPassword(String email, String password) {
 		Transaction transaction = null;
 		User user = null;
 		try {
 			Session session = FactoryProvider.getFactory().openSession();
-			// start a transaction
 			transaction = session.beginTransaction();
-			// get an user object
-			user = (User) session.createQuery("FROM User U WHERE U.email = :email").setParameter("email", email)
-					.uniqueResult();
-			// check password
-			if (user != null && user.getPassword().equals(password)) {
-				return true;
-			}
-			// commit transaction
+			Query<User> query = session
+					.createQuery("FROM User WHERE email = :email AND password = :password", User.class);
+			query.setParameter("email", email);
+			query.setParameter("password", password);
+			user = query.uniqueResult();
 			transaction.commit();
 		} catch (Exception e) {
 			if (transaction != null) {
@@ -56,7 +57,7 @@ public class DatabaseClass {
 			}
 			e.printStackTrace();
 		}
-		return false;
+		return user;
 	}
 
 	// user

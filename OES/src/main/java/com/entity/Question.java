@@ -3,6 +3,8 @@ package com.entity;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -25,11 +27,9 @@ public class Question {
 	@Column(name = "qdesc" ,length = 255)
 	private String qdesc;
 	
-	@NotNull
 	@Column(name = "optn1")
 	private String optn1;
 
-	@NotNull
 	@Column(name = "optn2")
 	private String optn2;
 	
@@ -38,6 +38,11 @@ public class Question {
 	
 	@Column(name = "optn4")
 	private String optn4;
+	
+	@NotNull
+	@Enumerated(EnumType.STRING)
+	@Column(name = "questionType")
+	private QuestionType questionType = QuestionType.MCQ;
 
 	@NotNull
 	@Column(name = "ans" )
@@ -127,6 +132,14 @@ public class Question {
 		this.addedby = addedby;
 	}
 
+	public QuestionType getQuestionType() {
+		return questionType;
+	}
+
+	public void setQuestionType(QuestionType questionType) {
+		this.questionType = questionType;
+	}
+
 	public Question(String quesid, String examid, String ques, String qdesc, String optn1, String optn2, String optn3,
 			String optn4, String ans, String addedby) {
 		super();
@@ -140,10 +153,12 @@ public class Question {
 		this.optn4 = optn4;
 		this.ans = ans;
 		this.addedby = addedby;
+		this.questionType = QuestionType.MCQ;
 	}
 
 	public Question() {
 		super();
+		this.questionType = QuestionType.MCQ;
 		// TODO Auto-generated constructor stub
 	}
 
