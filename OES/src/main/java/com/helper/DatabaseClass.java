@@ -1,8 +1,10 @@
 package com.helper;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -606,6 +608,89 @@ public class DatabaseClass {
 			ListOfques = new ArrayList<>();
 		}
 		return ListOfques;
+	}
+
+	// start exam
+	public ExamAttempt startExam(String examId, String studentId) {
+		Transaction transaction = null;
+		ExamAttempt examAttempt = null;
+		Session session = null;
+		try {
+			session = FactoryProvider.getFactory().openSession();
+			transaction = session.beginTransaction();
+			
+			// Fetch the Exam
+			Exam exam = session.get(Exam.class, examId);
+			if (exam == null) {
+				return null;
+			}
+			
+			// Validate examStatus == PUBLISHED
+			if (exam.getExamStatus() != ExamStatus.PUBLISHED) {
+				return null;
+			}
+			
+			// Validate time window (if startTime/endTime are not null)
+			LocalDateTime now = LocalDateTime.now();
+			if (exam.getStartTime() != null && now.isBefore(exam.getStartTime())) {
+				return null;
+			}
+			if (exam.getEndTime() != null && now.isAfter(exam.getEndTime())) {
+				return null;
+			}
+			
+			// Check if ExamAttempt already exists
+			String hql = "FROM ExamAttempt e WHERE e.examId = :examId AND e.studentId = :studentId";
+			Query<ExamAttempt> existingQuery = session.createQuery(hql, ExamAttempt.class);
+			existingQuery.setParameter("examId", examId);
+			existingQuery.setParameter("studentId", studentId);
+			ExamAttempt existingAttempt = existingQuery.uniqueResult();
+			
+			if (existingAttempt != null && "SUBMITTED".equals(existingAttempt.getStatus())) {
+				return null;
+			}
+			
+			// Fetch randomized questions within the same session
+			int limit = Integer.parseInt(exam.getTotalQues());
+			String questionHql = "FROM Question s WHERE s.examid = :examId ORDER BY RAND()";
+			Query<Question> questionQuery = session.createQuery(questionHql, Question.class);
+			questionQuery.setParameter("examId", examId);
+			questionQuery.setMaxResults(limit);
+			List<Question> questions = questionQuery.getResultList();
+			
+			if (questions == null || questions.isEmpty()) {
+				return null;
+			}
+			
+			// Create comma-separated question IDs
+			String questionIds = questions.stream()
+					.map(Question::getQuesid)
+					.collect(Collectors.joining(","));
+			
+			// Create new ExamAttempt
+			examAttempt = new ExamAttempt();
+			examAttempt.setAttemptId(RandomIdGenerator.generateRandomString());
+			examAttempt.setExamId(examId);
+			examAttempt.setStudentId(studentId);
+			examAttempt.setStartTime(now);
+			examAttempt.setQuestionIds(questionIds);
+			examAttempt.setStatus("STARTED");
+			
+			// Persist ExamAttempt
+			session.save(examAttempt);
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+			examAttempt = null;
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+		return examAttempt;
 	}
 
 	// get questions
