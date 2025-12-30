@@ -5,6 +5,8 @@ import java.sql.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -37,6 +39,11 @@ public class User {
 	@NotNull
 	@Column(name = "date")
 	private Date created_Date;
+	
+	@NotNull
+	@Enumerated(EnumType.STRING)
+	@Column(name = "role")
+	private Role role = Role.STUDENT;
 
 	public String getId() {
 		return id;
@@ -85,6 +92,14 @@ public class User {
 	public void setCreated_Date(Date created_Date) {
 		this.created_Date = created_Date;
 	}
+	
+	public Role getRole() {
+		return role;
+	}
+
+	public void setRole(Role role) {
+		this.role = role;
+	}
 
 	public User(String id, String username, String email, String phone_no, String password, Date created_Date) {
 		super();
@@ -94,6 +109,7 @@ public class User {
 		this.phone_no = phone_no;
 		this.password = password;
 		this.created_Date = created_Date;
+		this.role = Role.STUDENT;
 	}
 
 	public User() {
