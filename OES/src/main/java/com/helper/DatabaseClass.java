@@ -1021,6 +1021,50 @@ public class DatabaseClass {
 		return result;
 	}
 
+	// submit exam
+	public boolean submitExam(String attemptId) {
+		Transaction transaction = null;
+		boolean result = false;
+		Session session = null;
+		try {
+			session = FactoryProvider.getFactory().openSession();
+			transaction = session.beginTransaction();
+			
+			// Fetch ExamAttempt by attemptId
+			ExamAttempt examAttempt = session.get(ExamAttempt.class, attemptId);
+			
+			// Validate ExamAttempt exists
+			if (examAttempt == null) {
+				return false;
+			}
+			
+			// Validate status == "STARTED"
+			if (!"STARTED".equals(examAttempt.getStatus())) {
+				return false;
+			}
+			
+			// Set endTime and status
+			examAttempt.setEndTime(LocalDateTime.now());
+			examAttempt.setStatus("SUBMITTED");
+			
+			// Persist changes
+			session.update(examAttempt);
+			transaction.commit();
+			result = true;
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+			result = false;
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+		return result;
+	}
+
 	// get marks of student from answer table
 	public List<Answer> getans(String exId, String sid) {
 		Transaction transaction = null;
