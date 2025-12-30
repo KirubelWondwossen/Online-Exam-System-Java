@@ -1150,6 +1150,100 @@ public class DatabaseClass {
 		return result;
 	}
 
+	// generate result
+	public boolean generateResult(String attemptId) {
+		Transaction transaction = null;
+		boolean result = false;
+		Session session = null;
+		try {
+			session = FactoryProvider.getFactory().openSession();
+			transaction = session.beginTransaction();
+			
+			// Fetch ExamAttempt by attemptId
+			ExamAttempt examAttempt = session.get(ExamAttempt.class, attemptId);
+			
+			// Validate ExamAttempt exists and status == "SUBMITTED"
+			if (examAttempt == null || !"SUBMITTED".equals(examAttempt.getStatus())) {
+				return false;
+			}
+			
+			// Fetch Exam to get totalQues and markright
+			Exam exam = session.get(Exam.class, examAttempt.getExamId());
+			if (exam == null) {
+				return false;
+			}
+			
+			// Fetch all Answer records for attemptId
+			String answerHql = "FROM Answer a WHERE a.attemptId = :attemptId";
+			Query<Answer> answerQuery = session.createQuery(answerHql, Answer.class);
+			answerQuery.setParameter("attemptId", attemptId);
+			List<Answer> answers = answerQuery.getResultList();
+			
+			// Calculate totalMarks = sum of Answer.mark (numeric)
+			int totalMarks = 0;
+			for (Answer answer : answers) {
+				try {
+					String markStr = answer.getMark();
+					if (markStr != null && !markStr.trim().isEmpty()) {
+						totalMarks += Integer.parseInt(markStr.trim());
+					}
+				} catch (NumberFormatException e) {
+					// Skip invalid marks
+					continue;
+				}
+			}
+			
+			// Calculate total possible marks = Exam.totalQues * Exam.markright
+			int totalPossibleMarks = 0;
+			try {
+				int totalQues = Integer.parseInt(exam.getTotalQues().trim());
+				int markRight = Integer.parseInt(exam.getMarkright().trim());
+				totalPossibleMarks = totalQues * markRight;
+			} catch (NumberFormatException e) {
+				return false; // Invalid exam configuration
+			}
+			
+			// Check if Result already exists
+			String resultHql = "FROM Result r WHERE r.studid = :studid AND r.examid = :examid";
+			Query<Result> resultQuery = session.createQuery(resultHql, Result.class);
+			resultQuery.setParameter("studid", examAttempt.getStudentId());
+			resultQuery.setParameter("examid", examAttempt.getExamId());
+			Result existingResult = resultQuery.uniqueResult();
+			
+			if (existingResult != null) {
+				// Update existing result
+				existingResult.setMarks(String.valueOf(totalMarks));
+				existingResult.setTotalmarks(String.valueOf(totalPossibleMarks));
+				existingResult.setExstatus("EVALUATED");
+				session.update(existingResult);
+			} else {
+				// Create new Result record
+				Result resultRecord = new Result();
+				resultRecord.setResultid(RandomIdGenerator.generateRandomString());
+				resultRecord.setExamid(examAttempt.getExamId());
+				resultRecord.setStudid(examAttempt.getStudentId());
+				resultRecord.setMarks(String.valueOf(totalMarks));
+				resultRecord.setTotalmarks(String.valueOf(totalPossibleMarks));
+				resultRecord.setExstatus("EVALUATED");
+				session.save(resultRecord);
+			}
+			
+			transaction.commit();
+			result = true;
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+			result = false;
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+		return result;
+	}
+
 	// get marks of student from answer table
 	public List<Answer> getans(String exId, String sid) {
 		Transaction transaction = null;
