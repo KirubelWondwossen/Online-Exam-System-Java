@@ -1065,6 +1065,91 @@ public class DatabaseClass {
 		return result;
 	}
 
+	// auto-grade attempt
+	public boolean autoGradeAttempt(String attemptId) {
+		Transaction transaction = null;
+		boolean result = false;
+		Session session = null;
+		try {
+			session = FactoryProvider.getFactory().openSession();
+			transaction = session.beginTransaction();
+			
+			// Fetch ExamAttempt by attemptId
+			ExamAttempt examAttempt = session.get(ExamAttempt.class, attemptId);
+			
+			// Validate ExamAttempt exists and status == "SUBMITTED"
+			if (examAttempt == null || !"SUBMITTED".equals(examAttempt.getStatus())) {
+				return false;
+			}
+			
+			// Fetch Exam to get markright and markwrong values
+			Exam exam = session.get(Exam.class, examAttempt.getExamId());
+			if (exam == null) {
+				return false;
+			}
+			
+			String markRight = exam.getMarkright();
+			String markWrong = exam.getMarkwrong();
+			
+			// Fetch all Answer records linked to this attemptId
+			String answerHql = "FROM Answer a WHERE a.attemptId = :attemptId";
+			Query<Answer> answerQuery = session.createQuery(answerHql, Answer.class);
+			answerQuery.setParameter("attemptId", attemptId);
+			List<Answer> answers = answerQuery.getResultList();
+			
+			// Grade each answer
+			for (Answer answer : answers) {
+				// Fetch corresponding Question
+				Question question = session.get(Question.class, answer.getQuestionid());
+				if (question == null) {
+					continue; // Skip if question not found
+				}
+				
+				// Check question type
+				QuestionType questionType = question.getQuestionType();
+				
+				// Grade only MCQ and TRUE_FALSE questions
+				if (questionType == QuestionType.MCQ || questionType == QuestionType.TRUE_FALSE) {
+					// Compare Answer.opt with Question.ans
+					String studentAnswer = answer.getOpt();
+					String correctAnswer = question.getAns();
+					
+					// Check if answer is correct
+					boolean isCorrect = false;
+					if (studentAnswer != null && correctAnswer != null) {
+						isCorrect = studentAnswer.trim().equals(correctAnswer.trim());
+					}
+					
+					if (isCorrect) {
+						// Correct answer
+						answer.setMark(markRight);
+					} else {
+						// Incorrect answer
+						answer.setMark(markWrong);
+					}
+					
+					// Update the answer
+					session.update(answer);
+				}
+				// If questionType == SHORT_ANSWER: Skip (leave mark unchanged)
+			}
+			
+			transaction.commit();
+			result = true;
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+			result = false;
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+		return result;
+	}
+
 	// get marks of student from answer table
 	public List<Answer> getans(String exId, String sid) {
 		Transaction transaction = null;
