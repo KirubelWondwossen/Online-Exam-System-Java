@@ -280,7 +280,25 @@ List<Enroll>
           n.setAddedby(addedby); n.setDescription(description);
           n.setNoticeid(noticeid); n.setNoticetitle(noticetitle); if
           (DAO.addnotice(n)){ response.sendRedirect("User-Page.jsp?pg=7"); }
-          else { response.sendRedirect("User-Page.jsp?pg=1"); } } %></Result
+          else { response.sendRedirect("User-Page.jsp?pg=1"); } }
+          /*=============================gradeShortAnswer========================================
+          */ else if (request.getParameter("page") != null &&
+          request.getParameter("page").toString().equals("gradeShortAnswer")) {
+          String answerId = request.getParameter("answerId"); String mark =
+          request.getParameter("mark"); String examId =
+          request.getParameter("examId"); String attemptId =
+          request.getParameter("attemptId"); if (answerId != null && mark !=
+          null) { if (DAO.gradeShortAnswer(answerId, mark)) { if (examId != null
+          && attemptId != null) {
+          response.sendRedirect("Grade-Short-Answers.jsp?examId=" + examId +
+          "&attemptId=" + attemptId + "&msg=success"); } else {
+          response.sendRedirect("Grade-Short-Answers.jsp?msg=success"); } } else
+          { if (examId != null && attemptId != null) {
+          response.sendRedirect("Grade-Short-Answers.jsp?examId=" + examId +
+          "&attemptId=" + attemptId + "&msg=error"); } else {
+          response.sendRedirect("Grade-Short-Answers.jsp?msg=error"); } } } else
+          { response.sendRedirect("Grade-Short-Answers.jsp?msg=error"); } }
+          %></Result
         ></Answer
       ></Answer
     ></Student
