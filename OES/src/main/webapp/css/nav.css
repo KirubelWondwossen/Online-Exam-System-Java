@@ -131,6 +131,16 @@ img {
 
     cursor: pointer;
 }
+
+.role-badge {
+    background-color: var(--clr-green-100);
+    color: var(--clr-white);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: var(--fw-600);
+    margin: 0 5px;
+}
 .settings-menu {
     position: absolute;
     min-width: 20rem;

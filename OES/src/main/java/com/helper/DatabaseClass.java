@@ -1651,4 +1651,71 @@ public class DatabaseClass {
 		}
 		return question;
 	}
+
+	// get student results
+	public List<Result> getStudentResults(String studentId) {
+		Transaction transaction = null;
+		List<Result> resultList = new ArrayList<>();
+		try {
+			Session session = FactoryProvider.getFactory().openSession();
+			transaction = session.beginTransaction();
+			String hql = "FROM Result r WHERE r.studid = :studentId AND r.exstatus = 'EVALUATED' ORDER BY r.resultid DESC";
+			Query<Result> query = session.createQuery(hql, Result.class);
+			query.setParameter("studentId", studentId);
+			resultList = query.getResultList();
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+			resultList = new ArrayList<>();
+		}
+		return resultList;
+	}
+
+	// get exam attempt by attempt id
+	public ExamAttempt getExamAttempt(String attemptId) {
+		Transaction transaction = null;
+		ExamAttempt examAttempt = null;
+		Session session = null;
+		try {
+			session = FactoryProvider.getFactory().openSession();
+			transaction = session.beginTransaction();
+			examAttempt = session.get(ExamAttempt.class, attemptId);
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+		return examAttempt;
+	}
+
+	// get answers by attempt id
+	public List<Answer> getAnswersByAttemptId(String attemptId) {
+		Transaction transaction = null;
+		List<Answer> answerList = new ArrayList<>();
+		try {
+			Session session = FactoryProvider.getFactory().openSession();
+			transaction = session.beginTransaction();
+			String hql = "FROM Answer a WHERE a.attemptId = :attemptId";
+			Query<Answer> query = session.createQuery(hql, Answer.class);
+			query.setParameter("attemptId", attemptId);
+			answerList = query.getResultList();
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+			answerList = new ArrayList<>();
+		}
+		return answerList;
+	}
 }

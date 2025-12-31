@@ -21,11 +21,11 @@ response.setHeader("Expires", "0"); //prevents caching at the proxy server
 	<nav class="main-nav flex-div">
 		<div class="main-nav-left flex-div">
 			<i class="fa fa-bars" aria-hidden="true" id="menu-icon"></i> <a
-				href="" class="nav-logo">Welcome To Online Examination System</a>
+				href="" class="nav-logo">Online Examination System</a>
 		</div>
 		<div class="main-nav-right flex-div" id="showprofilemenu">
 			<a href="Student-Login.jsp?msg=1"><button class="stud-login-btn">Student Login</button></a> &nbsp;&nbsp;&nbsp;&nbsp;
-			<a href="User-Login.jsp?msg=1"><button class="stud-login-btn">User Login</button></a>
+			<a href="User-Login.jsp?msg=1"><button class="stud-login-btn">Admin/Instructor Login</button></a>
 		</div>
 	</nav>
 	<div class="new">

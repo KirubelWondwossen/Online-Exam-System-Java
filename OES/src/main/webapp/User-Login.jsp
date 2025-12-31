@@ -4,7 +4,7 @@
 
 <head>
    <meta charset="utf-8">
-   <title>User Login</title>
+   <title>Admin/Instructor Login</title>
    <link rel="stylesheet" href="css/User-Login-Register.css">
    <link rel="stylesheet" href="css/nav.css">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,7 +20,7 @@
          <a href="index.jsp" class="nav-logo">Online Examination System</a>
       </div>
       <div class="main-nav-right flex-div" id="showprofilemenu">
-         <a href="Student-Login.jsp?msg=1"><button class="stud-login-btn">Student Login</button></a>
+         <a href="Student-Login.jsp?msg=no"><button class="stud-login-btn">Student Login</button></a><br>
       </div>
    </nav>
    <div class="new" >
@@ -33,7 +33,7 @@
          <div class="wrapper">
             <div class="title-text">
                <div class="title login">
-                  User Login
+                  Admin/Instructor Login
                </div>
                <div class="title signup">
                   Sign up
