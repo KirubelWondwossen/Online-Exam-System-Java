@@ -1150,6 +1150,62 @@ public class DatabaseClass {
 		return result;
 	}
 
+	// manual grade short answer question
+	public boolean gradeShortAnswer(String answerId, String mark) {
+		Transaction transaction = null;
+		boolean result = false;
+		Session session = null;
+		try {
+			session = FactoryProvider.getFactory().openSession();
+			transaction = session.beginTransaction();
+			
+			// Fetch Answer by answerId
+			Answer answer = session.get(Answer.class, answerId);
+			
+			// Validate Answer exists
+			if (answer == null) {
+				return false;
+			}
+			
+			// Get attemptId from Answer
+			String attemptId = answer.getAttemptId();
+			if (attemptId == null) {
+				return false;
+			}
+			
+			// Fetch ExamAttempt by attemptId
+			ExamAttempt examAttempt = session.get(ExamAttempt.class, attemptId);
+			
+			// Validate ExamAttempt exists
+			if (examAttempt == null) {
+				return false;
+			}
+			
+			// Validate ExamAttempt status == "SUBMITTED"
+			if (!"SUBMITTED".equals(examAttempt.getStatus())) {
+				return false;
+			}
+			
+			// Update Answer.mark with provided value
+			answer.setMark(mark);
+			session.update(answer);
+			
+			transaction.commit();
+			result = true;
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+			result = false;
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+		return result;
+	}
+
 	// generate result
 	public boolean generateResult(String attemptId) {
 		Transaction transaction = null;
@@ -1528,5 +1584,71 @@ public class DatabaseClass {
 			e.printStackTrace();
 		}
 		return en;
+	}
+
+	// get submitted attempts by exam
+	public List<ExamAttempt> getSubmittedAttemptsByExam(String examId) {
+		Transaction transaction = null;
+		List<ExamAttempt> attemptList = new ArrayList<>();
+		try {
+			Session session = FactoryProvider.getFactory().openSession();
+			transaction = session.beginTransaction();
+			String hql = "FROM ExamAttempt e WHERE e.examId = :examId AND e.status = 'SUBMITTED' ORDER BY e.endTime DESC";
+			Query<ExamAttempt> query = session.createQuery(hql, ExamAttempt.class);
+			query.setParameter("examId", examId);
+			attemptList = query.getResultList();
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+			attemptList = new ArrayList<>();
+		}
+		return attemptList;
+	}
+
+	// get short answer answers for an attempt
+	public List<Answer> getShortAnswerAnswers(String attemptId) {
+		Transaction transaction = null;
+		List<Answer> answerList = new ArrayList<>();
+		try {
+			Session session = FactoryProvider.getFactory().openSession();
+			transaction = session.beginTransaction();
+			String hql = "SELECT a FROM Answer a, Question q WHERE a.questionid = q.quesid AND a.attemptId = :attemptId AND q.questionType = :questionType";
+			Query<Answer> query = session.createQuery(hql, Answer.class);
+			query.setParameter("attemptId", attemptId);
+			query.setParameter("questionType", QuestionType.SHORT_ANSWER);
+			answerList = query.getResultList();
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+			answerList = new ArrayList<>();
+		}
+		return answerList;
+	}
+
+	// get question by answer id
+	public Question getQuestionByAnswerId(String answerId) {
+		Transaction transaction = null;
+		Question question = null;
+		try {
+			Session session = FactoryProvider.getFactory().openSession();
+			transaction = session.beginTransaction();
+			Answer answer = session.get(Answer.class, answerId);
+			if (answer != null && answer.getQuestionid() != null) {
+				question = session.get(Question.class, answer.getQuestionid());
+			}
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+		}
+		return question;
 	}
 }
