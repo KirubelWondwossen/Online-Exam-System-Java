@@ -34,8 +34,7 @@
             </div>
             <div class="form-container">
                <div class="form-inner">
-                  <form action="Controller.jsp" method="post" class="login">
-                     <input type="hidden" name="page" value="LoginStudent">
+                  <form action="<%= request.getContextPath() %>/controller?page=LoginStudent" method="post" class="login">
                      <div class="field">
                         <input type="email" name="email" class="text" placeholder="Email" required>
                      </div>

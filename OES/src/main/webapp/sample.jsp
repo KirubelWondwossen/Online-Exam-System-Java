@@ -52,8 +52,7 @@ String password= request.getParameter("password");
             <p>We have sent you one time password to your email</p>
             <div class="form-container">
                <div class="form-inner">
-                  <form action="Controller.jsp" method="post" class="login">
-                     <input type="hidden" name="page" value="New1User">
+                  <form action="<%= request.getContextPath() %>/controller?page=New1User" method="post" class="login">
                      <input type="hidden" name="username" value="<%=username %>">
                      <input type="hidden" name="email" value="<%=email %>">
                      <input type="hidden" name="phone_no" value="<%=phone %>">

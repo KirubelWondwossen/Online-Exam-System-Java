@@ -48,8 +48,7 @@
                   <div class="slider-tab"></div>
                </div>
                <div class="form-inner">
-                  <form action="Controller.jsp" method="post" class="login">
-                     <input type="hidden" name="page" value="LoginUser">
+                  <form action="<%= request.getContextPath() %>/controller?page=LoginUser" method="post" class="login">
                      <div class="field">
                         <input type="email" name="email" class="text" placeholder="Email" required>
                      </div>
@@ -115,8 +114,7 @@
                      %>
                  
                   </form>
-                  <form action="Controller.jsp" method="post" class="signup">
-                     <input type="hidden" name="page" value="NewUser">
+                  <form action="<%= request.getContextPath() %>/controller?page=NewUser" method="post" class="signup">
                      <div class="field">
                         <input type="text" name="username" class="text" placeholder="User Name" required>
                      </div>
