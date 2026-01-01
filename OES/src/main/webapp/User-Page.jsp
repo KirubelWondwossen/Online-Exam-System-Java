@@ -72,7 +72,7 @@ DatabaseClass DAO = new DatabaseClass(); %>
           <hr />
           <div class="setting-profile-1 flex-div">
             <button class="user-Edit-btn" onclick="openForm()">Edit</button>
-            <a href="Controller.jsp?page=logout1"
+            <a href="<%= request.getContextPath() %>/controller?page=logout"
               ><button class="user-Edit-btn">Logout</button></a
             >
             <button class="user-Edit-btn" id="showprofilemenu1" href="">
@@ -94,6 +94,17 @@ DatabaseClass DAO = new DatabaseClass(); %>
           ><i class="fa fa-user-o" aria-hidden="true"></i>
           <p>Student</p>
         </a>
+        <% if("ADMIN".equals(session.getAttribute("Role"))) { %>
+        <a href="Create-Instructor.jsp" class="sidebar-links"
+          ><i class="fa fa-user-plus" aria-hidden="true"></i>
+          <p>Create Instructor</p>
+        </a>
+        <% } %> <% if("INSTRUCTOR".equals(session.getAttribute("Role"))) { %>
+        <a href="Create-Student.jsp" class="sidebar-links"
+          ><i class="fa fa-user-plus" aria-hidden="true"></i>
+          <p>Create Student</p>
+        </a>
+        <% } %>
         <a href="User-Page.jsp?pg=3" class="sidebar-links"
           ><i class="fa fa-graduation-cap" aria-hidden="true"></i>
           <p>Exam</p>

@@ -12,6 +12,7 @@ import com.helper.GEmailSender;
 import com.helper.OTP;
 import com.helper.RandomIdGenerator;
 import com.helper.DateFormat;
+import com.helper.EmailConfig;
 import com.entity.User;
 import com.entity.Role;
 import com.entity.Student;
@@ -23,6 +24,35 @@ public class ControllerServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         DAO = new DatabaseClass();
+        
+        // Test email configuration on startup
+        testEmailConfiguration();
+    }
+    
+    private void testEmailConfiguration() {
+        try {
+            GEmailSender emailSender = new GEmailSender();
+            
+            if (EmailConfig.isConfigured()) {
+                System.out.println("=== Email Configuration Test ===");
+                boolean testSuccess = emailSender.testEmailConfiguration(EmailConfig.getFromEmail());
+                
+                if (testSuccess) {
+                    System.out.println("✅ Email configuration test PASSED");
+                    System.out.println("Email system is ready for use");
+                } else {
+                    System.out.println("❌ Email configuration test FAILED");
+                    System.out.println("Please check your email settings and restart the server");
+                }
+                System.out.println("===============================");
+            } else {
+                System.out.println("⚠️  Email configuration is incomplete");
+                System.out.println("Please set EMAIL_USERNAME and EMAIL_PASSWORD environment variables");
+                EmailConfig.logConfiguration();
+            }
+        } catch (Exception e) {
+            System.err.println("Error testing email configuration: " + e.getMessage());
+        }
     }
     
     @Override
@@ -45,6 +75,10 @@ public class ControllerServlet extends HttpServlet {
             handleUserLogin(request, response);
         } else if ("LoginStudent".equals(pageAction)) {
             handleStudentLogin(request, response);
+        } else if ("CreateInstructor".equals(pageAction)) {
+            handleCreateInstructor(request, response);
+        } else if ("CreateStudent".equals(pageAction)) {
+            handleCreateStudent(request, response);
         } else if ("logout".equals(pageAction)) {
             handleLogout(request, response);
         } else {
@@ -55,34 +89,9 @@ public class ControllerServlet extends HttpServlet {
     private void handleNewUser(HttpServletRequest request, HttpServletResponse response) 
             throws IOException {
         
-        String username = request.getParameter("username");
-        String email = request.getParameter("email");
-        String phoneNo = request.getParameter("phone_no");
-        String password = request.getParameter("password");
-        
-        GEmailSender emailSender = new GEmailSender();
-        String fromEmail = "systemonlineexamination@gmail.com";
-        String subject = "OTP Verification";
-        
-        if (DAO.UserValidate(email)) {
-            
-            OTP otpGenerator = new OTP();
-            String otpValue = otpGenerator.generateOTP(6);
-            String messageText = "Your One Time Password is " + otpValue + "\\n\\nVerify your account using this OTP.";
-            
-            boolean sent = emailSender.sendEmail(email, fromEmail, subject, messageText);
-            
-            if (sent) {
-                String redirectUrl = "sample.jsp?email=" + email + "&otp=" + otpValue + 
-                                   "&username=" + username + "&password=" + password + 
-                                   "&phone=" + phoneNo;
-                response.sendRedirect(redirectUrl);
-            } else {
-                response.sendRedirect("sample.jsp?msg=unsuccessfully");
-            }
-        } else {
-            response.sendRedirect("User-Login.jsp?msg=Already");
-        }
+        // This method is now deprecated - public signup is disabled
+        // Redirect to login page with message
+        response.sendRedirect("User-Login.jsp?msg=public_signup_disabled");
     }
     
     private void handleOTPVerification(HttpServletRequest request, HttpServletResponse response) 
@@ -175,5 +184,122 @@ public class ControllerServlet extends HttpServlet {
         HttpSession session = request.getSession();
         session.invalidate();
         response.sendRedirect("index.jsp");
+    }
+    
+    private void handleCreateInstructor(HttpServletRequest request, HttpServletResponse response) 
+            throws IOException, ServletException {
+        
+        // Check if user is logged in and has ADMIN role
+        HttpSession session = request.getSession();
+        String userRole = (String) session.getAttribute("Role");
+        
+        if (userRole == null || !"ADMIN".equals(userRole)) {
+            response.sendRedirect("Create-Instructor.jsp?msg=unauthorized");
+            return;
+        }
+        
+        String username = request.getParameter("username");
+        String email = request.getParameter("email");
+        String phoneNo = request.getParameter("phone_no");
+        String password = request.getParameter("password");
+        
+        // Check if email already exists
+        if (!DAO.UserValidate(email)) {
+            response.sendRedirect("Create-Instructor.jsp?msg=Already");
+            return;
+        }
+        
+        // Create instructor with INSTRUCTOR role
+        String id = RandomIdGenerator.generateRandomString();
+        User instructor = new User();
+        instructor.setId(id);
+        instructor.setUsername(username);
+        instructor.setEmail(email);
+        instructor.setPhone_no(phoneNo);
+        instructor.setPassword(password);
+        instructor.setCreated_Date(DateFormat.getCurrentDate());
+        instructor.setRole(Role.INSTRUCTOR); // Automatically assign INSTRUCTOR role
+        
+        boolean saved = DAO.saveUser(instructor);
+        
+        if (saved) {
+            // Send welcome email
+            sendWelcomeEmail(email, username, password, "INSTRUCTOR");
+            response.sendRedirect("Create-Instructor.jsp?msg=successfully");
+        } else {
+            response.sendRedirect("Create-Instructor.jsp?msg=unsuccessfully");
+        }
+    }
+    
+    private void handleCreateStudent(HttpServletRequest request, HttpServletResponse response) 
+            throws IOException, ServletException {
+        
+        // Check if user is logged in and has INSTRUCTOR role
+        HttpSession session = request.getSession();
+        String userRole = (String) session.getAttribute("Role");
+        
+        if (userRole == null || !"INSTRUCTOR".equals(userRole)) {
+            response.sendRedirect("Create-Student.jsp?msg=unauthorized");
+            return;
+        }
+        
+        String username = request.getParameter("username");
+        String email = request.getParameter("email");
+        String phoneNo = request.getParameter("phone_no");
+        String password = request.getParameter("password");
+        
+        // Check if email already exists
+        if (!DAO.UserValidate(email)) {
+            response.sendRedirect("Create-Student.jsp?msg=Already");
+            return;
+        }
+        
+        // Create student with STUDENT role
+        String id = RandomIdGenerator.generateRandomString();
+        User student = new User();
+        student.setId(id);
+        student.setUsername(username);
+        student.setEmail(email);
+        student.setPhone_no(phoneNo);
+        student.setPassword(password);
+        student.setCreated_Date(DateFormat.getCurrentDate());
+        student.setRole(Role.STUDENT); // Automatically assign STUDENT role
+        
+        boolean saved = DAO.saveUser(student);
+        
+        if (saved) {
+            // Send welcome email
+            sendWelcomeEmail(email, username, password, "STUDENT");
+            response.sendRedirect("Create-Student.jsp?msg=successfully");
+        } else {
+            response.sendRedirect("Create-Student.jsp?msg=unsuccessfully");
+        }
+    }
+    
+    private void sendWelcomeEmail(String email, String username, String password, String role) {
+        try {
+            GEmailSender emailSender = new GEmailSender();
+            String fromEmail = EmailConfig.getFromEmail();
+            String subject = "Welcome to Online Examination System";
+            
+            String messageText = "Dear " + username + ",\n\n" +
+                               "Your " + role + " account has been created successfully.\n\n" +
+                               "Login Details:\n" +
+                               "Email: " + email + "\n" +
+                               "Password: " + password + "\n\n" +
+                               "Please change your password after first login.\n\n" +
+                               "Regards,\n" +
+                               "Online Examination System";
+            
+            boolean sent = emailSender.sendEmail(email, fromEmail, subject, messageText);
+            
+            if (sent) {
+                System.out.println("Welcome email sent to: " + email);
+            } else {
+                System.err.println("Failed to send welcome email to: " + email);
+            }
+        } catch (Exception e) {
+            System.err.println("Error sending welcome email: " + e.getMessage());
+        }
     }
 }
