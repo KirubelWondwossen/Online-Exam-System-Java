@@ -47,7 +47,7 @@ String estudid = request.getParameter("estudid");
                     <span class="stud-head-style flex-div-center">Create New Batch</span>
                 </div>
                 <div class="UserProfile1">
-                    <form action="Controller.jsp" method="post" class="signup">
+                    <form action="<%= request.getContextPath() %>/controller?page=createbatch" method="post" class="signup">
                     <input type="hidden" name="page" value="createbatch">
                     <input type="hidden" name="addedby" value="<%=id%>">
                         <hr>
@@ -161,7 +161,7 @@ String estudid = request.getParameter("estudid");
 					<span class="stud-head-style flex-div-center">Edit Batch</span>
 				</div>
 				<div class="UserProfile1">
-					<form action="Controller.jsp" method="post" class="signup">
+					<form action="<%= request.getContextPath() %>/controller?page=createbatch" method="post" class="signup">
 						<input type="hidden" name="page" value="editbatch"> 
 						<hr>
 						<div class="row flex-div-center">
@@ -195,7 +195,7 @@ String estudid = request.getParameter("estudid");
                         <br>
                     </div>
                     <div class="addstudent1">
-                        <form action="Controller.jsp" method="post" class="signup">
+                        <form action="<%= request.getContextPath() %>/controller?page=createbatch" method="post" class="signup">
                     		<input type="hidden" name="page" value="addStudent">
                             <table>
                                 <tr>

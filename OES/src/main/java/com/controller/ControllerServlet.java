@@ -16,6 +16,7 @@ import com.helper.EmailConfig;
 import com.entity.User;
 import com.entity.Role;
 import com.entity.Student;
+import com.entity.Batch;
 
 public class ControllerServlet extends HttpServlet {
     
@@ -79,6 +80,12 @@ public class ControllerServlet extends HttpServlet {
             handleCreateInstructor(request, response);
         } else if ("CreateStudent".equals(pageAction)) {
             handleCreateStudent(request, response);
+        } else if ("createbatch".equals(pageAction)) {
+            handleCreateBatch(request, response);
+        } else if ("editbatch".equals(pageAction)) {
+            handleEditBatch(request, response);
+        } else if ("deletebatch".equals(pageAction)) {
+            handleDeleteBatch(request, response);
         } else if ("logout".equals(pageAction)) {
             handleLogout(request, response);
         } else {
@@ -300,6 +307,107 @@ public class ControllerServlet extends HttpServlet {
             }
         } catch (Exception e) {
             System.err.println("Error sending welcome email: " + e.getMessage());
+        }
+    }
+    
+    // ==================== BATCH MANAGEMENT METHODS ====================
+    
+    private void handleCreateBatch(HttpServletRequest request, HttpServletResponse response) 
+            throws IOException, ServletException {
+        
+        // Check if user is logged in and has appropriate role
+        HttpSession session = request.getSession();
+        String userRole = (String) session.getAttribute("Role");
+        
+        if (userRole == null || (!"ADMIN".equals(userRole) && !"INSTRUCTOR".equals(userRole))) {
+            response.sendRedirect("User-Page.jsp?msg=unauthorized");
+            return;
+        }
+        
+        String batchname = request.getParameter("batchname");
+        String addedby = (String) session.getAttribute("UserId");
+        
+        if (batchname == null || batchname.trim().isEmpty()) {
+            response.sendRedirect("User-Page.jsp?pg=2&msg=batchname_required");
+            return;
+        }
+        
+        // Create batch object
+        Batch batch = new Batch();
+        batch.setBatchid(RandomIdGenerator.generateRandomString());
+        batch.setBatchname(batchname);
+        batch.setAddedby(addedby);
+        batch.setAddeddate(DateFormat.getCurrentDate());
+        
+        // Save batch
+        boolean saved = DAO.addBatch(batch);
+        
+        if (saved) {
+            response.sendRedirect("User-Page.jsp?pg=2&msg=batch_created");
+        } else {
+            response.sendRedirect("User-Page.jsp?pg=2&msg=batch_creation_failed");
+        }
+    }
+    
+    private void handleEditBatch(HttpServletRequest request, HttpServletResponse response) 
+            throws IOException, ServletException {
+        
+        // Check if user is logged in
+        HttpSession session = request.getSession();
+        String userRole = (String) session.getAttribute("Role");
+        
+        if (userRole == null || (!"ADMIN".equals(userRole) && !"INSTRUCTOR".equals(userRole))) {
+            response.sendRedirect("User-Page.jsp?msg=unauthorized");
+            return;
+        }
+        
+        String batchid = request.getParameter("batchid");
+        String batchname = request.getParameter("batchname");
+        
+        if (batchid == null || batchname == null || batchname.trim().isEmpty()) {
+            response.sendRedirect("User-Page.jsp?pg=2&msg=invalid_batch_data");
+            return;
+        }
+        
+        // Update batch
+        try {
+            DAO.updatebatchDetails(batchid, batchname);
+            response.sendRedirect("User-Page.jsp?pg=2&msg=batch_updated");
+        } catch (Exception e) {
+            response.sendRedirect("User-Page.jsp?pg=2&msg=batch_update_failed");
+        }
+    }
+    
+    private void handleDeleteBatch(HttpServletRequest request, HttpServletResponse response) 
+            throws IOException, ServletException {
+        
+        // Check if user is logged in and has ADMIN role
+        HttpSession session = request.getSession();
+        String userRole = (String) session.getAttribute("Role");
+        
+        if (userRole == null || !"ADMIN".equals(userRole)) {
+            response.sendRedirect("User-Page.jsp?pg=2&msg=unauthorized");
+            return;
+        }
+        
+        String batchid = request.getParameter("batchid");
+        
+        if (batchid == null || batchid.trim().isEmpty()) {
+            response.sendRedirect("User-Page.jsp?pg=2&msg=invalid_batch_id");
+            return;
+        }
+        
+        try {
+            // Delete batch (this will also delete associated students)
+            Batch deletedBatch = DAO.deletebatch(batchid);
+            
+            if (deletedBatch != null) {
+                response.sendRedirect("User-Page.jsp?pg=2&msg=batch_deleted");
+            } else {
+                response.sendRedirect("User-Page.jsp?pg=2&msg=batch_delete_failed");
+            }
+        } catch (Exception e) {
+            response.sendRedirect("User-Page.jsp?pg=2&msg=batch_delete_error");
         }
     }
 }
